@@ -9,7 +9,14 @@ export default function ChallengePage() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
 
-  const myLink = `${window.location.origin}/challenge/accept?from=${user?.id}&name=${encodeURIComponent(user?.fullName || "Судлаач")}`;
+  const [myLink, setMyLink] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && user) {
+      const link = `${window.location.origin}/challenge/accept?from=${user.id}&name=${encodeURIComponent(user.fullName || "Судлаач")}`;
+      setMyLink(link);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

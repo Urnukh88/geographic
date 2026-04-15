@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 import {
@@ -20,6 +21,7 @@ interface QuizResult {
 }
 
 export default function ProgressPage() {
+  const router = useRouter();
   const { user, isLoaded } = useUser();
   const [results, setResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +107,7 @@ export default function ProgressPage() {
   const nextLevelXP = 2000;
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+    <div className="max-w-4xl mx-auto duration-500 animate-in fade-in">
       <div className="mb-8">
         <h1 className="text-4xl font-serif text-[#1A1209] mb-1">Миний ахиц</h1>
         <p className="text-[#7A6A58]">Таны суралцсан мэдлэг, дүн үнэлгээ</p>
@@ -215,8 +217,8 @@ export default function ProgressPage() {
                   key={i}
                   className="flex items-center gap-3 p-3 bg-[#FFF5EE] rounded-lg border border-[#F0DDD0]"
                 >
-                  <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
-                    <span className="text-orange-500 text-xs font-bold">!</span>
+                  <div className="flex items-center justify-center w-5 h-5 bg-orange-100 rounded-full">
+                    <span className="text-xs font-bold text-orange-500">!</span>
                   </div>
                   <span className="text-sm font-serif text-[#1A1209] capitalize">
                     {t.category}
@@ -227,7 +229,7 @@ export default function ProgressPage() {
               results.filter((r) => r.score / r.total_questions < 0.7)
                 .length === 0 && (
                 <div className="py-4 text-center">
-                  <p className="text-sm text-green-600 font-medium">
+                  <p className="text-sm font-medium text-green-600">
                     Гайхалтай! 🎉
                   </p>
                   <p className="text-xs text-[#7A6A58]">
@@ -242,7 +244,7 @@ export default function ProgressPage() {
             )}
           </div>
           <button
-            onClick={() => (window.location.href = "/quiz")}
+            onClick={() => router.push("/quiz")}
             className="block w-full bg-[#7C4F2F] text-white py-3 rounded-xl font-serif text-sm text-center hover:bg-[#5C3820] transition-all active:scale-[0.98]"
           >
             Шинэ тест эхлүүлэх
