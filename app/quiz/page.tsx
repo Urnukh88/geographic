@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { awardXP } from "@/lib/exp";
 import {
@@ -83,8 +84,11 @@ interface Question {
   explanation: string;
 }
 
-export default function QuizPage() {
+function QuizContent() {
   const { user, isLoaded } = useUser();
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+
   const [selected, setSelected] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +98,13 @@ export default function QuizPage() {
   const [chosenAnswer, setChosenAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [error, setError] = useState("");
-  const [xpGained, setXpGained] = useState<number | null>(null); // ← XP toast
+  const [xpGained, setXpGained] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelected(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
 
   const categoryName =
     categoryList.find((c) => c.slug === selected)?.name || "";
@@ -118,20 +128,12 @@ export default function QuizPage() {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_KEY}`,
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 1000,
+            model: "gpt-4o-mini",
+            max_tokens: 1500,
             messages: [
               {
                 role: "system",
-                content: `Чи газарзүйн тестийн асуулт үүсгэгч. Заавал зөвхөн JSON array буцаа, өөр юм бичихгүй, markdown ашиглахгүй.
-      Формат:
-     [{"question":"...","options":["А","Б","В","Г"],"correct":0,"explanation":"..."}]
-      "correct" нь зөв хариултын index (0-3).
-      Асуултууд заавал:
-     - Дунд сургуулийн сурагчдад ойлгомжтой байх
-     - Тодорхой, ойлгомжтой асуулт байх
-     - 4 хариулт нь тодорхой ялгаатай байх
-     - Монгол болон дэлхийн газарзүйн үндсэн мэдлэг шаардах`,
+                content: `Чи газарзүйн тестийн асуулт үүсгэгч. Заавал зөвхөн JSON array буцаа. Формат: [{"question":"...","options":["А","Б","В","Г"],"correct":0,"explanation":"..."}]`,
               },
               { role: "user", content: prompt },
             ],
@@ -150,15 +152,8 @@ export default function QuizPage() {
       setShowExplanation(false);
       setShowResult(false);
     } catch (err) {
-      setQuestions([
-        {
-          question: "Алдаа гарлаа",
-          options: [String(err), "", "", ""],
-          correct: 0,
-          explanation: String(err),
-        },
-      ]);
-      setShowResult(true);
+      setError("Асуулт үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.");
+      console.error(err);
     }
     setLoading(false);
   };
@@ -171,9 +166,7 @@ export default function QuizPage() {
 
   const saveResult = async (finalScore: number) => {
     if (!user) return;
-
-    // Quiz үр дүн хадгалах
-    const { error } = await supabase.from("quiz_results").insert([
+    await supabase.from("quiz_results").insert([
       {
         user_id: user.id,
         category: categoryName,
@@ -181,16 +174,9 @@ export default function QuizPage() {
         total_questions: questions.length,
       },
     ]);
-
-    if (error) {
-      console.error("Дата хадгалахад алдаа гарлаа:", error.message);
-    }
-
-    // ← XP нэмэх
-    const isPerfect = finalScore === questions.length;
     const gained = await awardXP(
       user.id,
-      isPerfect ? "QUIZ_PERFECT" : "QUIZ_COMPLETE",
+      finalScore === questions.length ? "QUIZ_PERFECT" : "QUIZ_COMPLETE",
     );
     setXpGained(gained);
   };
@@ -198,7 +184,6 @@ export default function QuizPage() {
   const handleNext = async () => {
     const newAnswers = [...answers, chosenAnswer!];
     setAnswers(newAnswers);
-
     if (currentQ + 1 >= questions.length) {
       const finalScore = newAnswers.filter(
         (a, i) => a === questions[i]?.correct,
@@ -212,7 +197,12 @@ export default function QuizPage() {
     }
   };
 
-  if (!isLoaded) return <Loader2 className="mx-auto mt-20 animate-spin" />;
+  if (!isLoaded)
+    return (
+      <div className="flex justify-center mt-20">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
 
   const current = questions[currentQ];
   const score = answers.filter((a, i) => a === questions[i]?.correct).length;
@@ -220,29 +210,21 @@ export default function QuizPage() {
   if (showResult) {
     return (
       <div className="max-w-xl mx-auto text-center">
-        <div className="bg-white rounded-2xl p-10 border border-[#E2D9CC]">
+        <div className="bg-white rounded-[32px] p-10 border border-[#E2D9CC] shadow-sm">
           <div className="mb-4 text-5xl">
-            {score >= questions.length * 0.8
-              ? "🏆"
-              : score >= questions.length * 0.5
-                ? "👍"
-                : "📚"}
+            {score >= 8 ? "🏆" : score >= 5 ? "👍" : "📚"}
           </div>
-          <h2 className="text-3xl font-serif text-[#1A1209] mb-2">Дууслаа!</h2>
-          <div className="text-6xl font-serif text-[#7C4F2F] mb-2">
+          <h2 className="text-3xl font-serif text-[#1A1209] mb-2">
+            Тест дууслаа!
+          </h2>
+          <div className="text-6xl font-serif text-[#7C4F2F] mb-4">
             {score}/{questions.length}
           </div>
-          <p className="text-[#7A6A58] text-sm mb-4">
-            {Math.round((score / questions.length) * 100)}% зөв хариулсан
-          </p>
 
-          {/* ← XP мэдэгдэл */}
           {xpGained !== null && (
-            <div className="flex items-center justify-center gap-2 bg-[#FFF8EC] border border-[#F0D080] rounded-xl px-5 py-3 mb-6 text-[#7C4F2F]">
+            <div className="flex items-center justify-center gap-2 bg-[#FFF8EC] border border-[#F0D080] rounded-2xl px-5 py-3 mb-6 text-[#7C4F2F] animate-bounce-slow">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />
-              <span className="font-serif font-semibold">
-                +{xpGained} XP олгогдлоо!
-              </span>
+              <span className="font-bold">+{xpGained} XP цуглууллаа!</span>
             </div>
           )}
 
@@ -253,15 +235,15 @@ export default function QuizPage() {
                 setSelected(null);
                 setXpGained(null);
               }}
-              className="border border-[#C4A882] text-[#7C4F2F] px-5 py-2.5 rounded-lg font-serif text-sm hover:bg-[#EDE5D8] transition-colors"
+              className="border border-[#C4A882] text-[#7C4F2F] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#EDE5D8] transition-all"
             >
-              Дахин сонгох
+              Сэдэв солих
             </button>
             <button
               onClick={startQuiz}
-              className="bg-[#7C4F2F] text-white px-5 py-2.5 rounded-lg font-serif text-sm hover:bg-[#5C3820] transition-colors"
+              className="bg-[#7C4F2F] text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#5C3820] transition-all shadow-md"
             >
-              Шинэ асуулт
+              Дахин эхлэх
             </button>
           </div>
         </div>
@@ -271,43 +253,43 @@ export default function QuizPage() {
 
   if (questions.length > 0 && current) {
     return (
-      <div className="max-w-xl mx-auto">
-        <div className="flex justify-between items-center mb-6 text-sm text-[#7A6A58]">
-          <span className="font-serif">
-            {currentQ + 1} / {questions.length}
+      <div className="max-w-xl px-4 mx-auto">
+        <div className="flex justify-between items-center mb-6 text-xs font-bold uppercase tracking-widest text-[#7A6A58]">
+          <span>
+            Асуулт {currentQ + 1} / {questions.length}
           </span>
-          <div className="flex-1 mx-4 h-2 bg-[#E2D9CC] rounded-full">
-            <div
-              className="h-2 bg-[#7C4F2F] rounded-full transition-all"
-              style={{ width: `${(currentQ / questions.length) * 100}%` }}
-            />
-          </div>
-          <span className="font-serif text-[#7C4F2F]">{categoryName}</span>
+          <span className="text-[#7C4F2F]">{categoryName}</span>
         </div>
-        <div className="bg-white rounded-2xl p-8 border border-[#E2D9CC] mb-4">
-          <h2 className="text-xl font-serif text-[#1A1209] mb-6 leading-relaxed">
+        <div className="h-2 bg-[#E2D9CC] rounded-full mb-8 overflow-hidden">
+          <div
+            className="h-full bg-[#7C4F2F] transition-all duration-500"
+            style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}
+          />
+        </div>
+        <div className="bg-white rounded-[32px] p-8 border border-[#E2D9CC] mb-6 shadow-sm">
+          <h2 className="text-2xl font-serif text-[#1A1209] mb-8 leading-tight">
             {current.question}
           </h2>
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-3">
             {current.options.map((opt, idx) => {
               let style =
-                "border border-[#E2D9CC] text-[#1A1209] hover:bg-[#F5F0E8] cursor-pointer";
+                "border-[#E2D9CC] bg-white hover:border-[#7C4F2F] hover:bg-[#FDFBF7]";
               if (chosenAnswer !== null) {
                 if (idx === current.correct)
                   style =
-                    "border-2 border-green-500 bg-green-50 text-green-800";
+                    "border-green-500 bg-green-50 text-green-700 shadow-[0_0_15px_rgba(34,197,94,0.2)]";
                 else if (idx === chosenAnswer)
-                  style = "border-2 border-red-400 bg-red-50 text-red-800";
-                else style = "border border-[#E2D9CC] text-[#AAA] opacity-50";
+                  style = "border-red-400 bg-red-50 text-red-700";
+                else style = "opacity-40 border-[#E2D9CC]";
               }
               return (
                 <button
                   key={idx}
                   onClick={() => handleAnswer(idx)}
-                  className={`p-4 rounded-xl text-left font-serif text-sm transition-all ${style}`}
+                  className={`p-5 rounded-2xl text-left font-medium text-sm transition-all border-2 ${style}`}
                 >
-                  <span className="mr-2 font-bold">
-                    {["А", "Б", "В", "Г"][idx]}.
+                  <span className="mr-3 opacity-50">
+                    {["А", "Б", "В", "Г"][idx]}
                   </span>{" "}
                   {opt}
                 </button>
@@ -315,18 +297,23 @@ export default function QuizPage() {
             })}
           </div>
           {showExplanation && (
-            <div className="mt-4 p-4 bg-[#F5F0E8] rounded-xl text-sm text-[#7A6A58] font-serif leading-relaxed">
-              💡 {current.explanation}
+            <div className="mt-6 p-5 bg-[#F8F5F0] rounded-2xl text-sm text-[#7A6A58] leading-relaxed border-l-4 border-[#7C4F2F]">
+              <div className="flex items-center gap-2 mb-1 font-bold text-[#7C4F2F] uppercase text-[10px] tracking-tighter">
+                <Brain size={14} /> Тайлбар
+              </div>
+              {current.explanation}
             </div>
           )}
         </div>
         {chosenAnswer !== null && (
           <button
             onClick={handleNext}
-            className="w-full bg-[#7C4F2F] text-white py-3 rounded-xl font-serif hover:bg-[#5C3820] transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#7C4F2F] text-white py-4 rounded-2xl font-bold hover:bg-[#5C3820] transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-900/10"
           >
-            {currentQ + 1 >= questions.length ? "Дуусгах" : "Дараагийн асуулт"}{" "}
-            <ChevronRight size={16} />
+            {currentQ + 1 >= questions.length
+              ? "Үр дүнг харах"
+              : "Дараагийн асуулт"}{" "}
+            <ChevronRight size={18} />
           </button>
         )}
       </div>
@@ -334,63 +321,77 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-[#EDE5D8] flex items-center justify-center mx-auto mb-4">
-          <Brain size={28} className="text-[#7C4F2F]" />
+    <div className="max-w-2xl px-4 pb-20 mx-auto">
+      <div className="mb-10 text-center">
+        <div className="w-20 h-20 rounded-[2.5rem] bg-white shadow-xl border border-[#F0EAE0] flex items-center justify-center mx-auto mb-6">
+          <Brain size={32} className="text-[#7C4F2F]" />
         </div>
-        <h1 className="text-4xl font-serif text-[#1A1209] mb-2">
+        <h1 className="text-4xl md:text-5xl font-serif text-[#1A1209] mb-4 tracking-tight">
           Тест шалгалт
         </h1>
-        <p className="text-[#7A6A58]">AI асуултуудыг автоматаар үүсгэнэ</p>
+        <p className="text-[#7A6A58] text-lg font-light">
+          Сэдвээ сонгоод AI-аар үүсгэсэн сонирхолтой асуултуудад хариулаарай.
+        </p>
       </div>
-      {error && (
-        <div className="p-4 mb-4 font-serif text-sm text-red-700 border border-red-200 bg-red-50 rounded-xl">
-          {error}
-        </div>
-      )}
-      <div className="bg-white rounded-2xl p-6 border border-[#E2D9CC] mb-4">
-        <h2 className="font-serif text-[#1A1209] mb-4 font-semibold">
-          Сэдэв сонгох
-        </h2>
-        <div className="flex flex-col gap-2">
-          {categoryList.map(({ slug, name, desc, icon: Icon }) => (
-            <button
-              key={slug}
-              onClick={() => setSelected(slug)}
-              className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all border ${
-                selected === slug
-                  ? "border-[#7C4F2F] bg-[#F5EDE4]"
-                  : "border-[#E2D9CC] hover:bg-[#F9F5EF]"
-              }`}
+
+      <div className="grid grid-cols-1 gap-3 mb-8 md:grid-cols-2">
+        {categoryList.map(({ slug, name, desc, icon: Icon }) => (
+          <button
+            key={slug}
+            onClick={() => setSelected(slug)}
+            className={`flex items-center gap-4 p-5 rounded-[2rem] text-left transition-all border-2 ${
+              selected === slug
+                ? "border-[#7C4F2F] bg-[#FDFBF7] shadow-md"
+                : "border-transparent bg-white hover:border-[#E2D9CC]"
+            }`}
+          >
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center ${selected === slug ? "bg-[#7C4F2F] text-white" : "bg-[#F8F5F0] text-[#7C4F2F]"}`}
             >
-              <Icon size={18} className="text-[#7C4F2F]" />
-              <div>
-                <p className="font-serif text-[#1A1209] text-sm font-medium">
-                  {name}
-                </p>
-                <p className="text-[#7A6A58] text-xs">{desc}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+              <Icon size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-[#1A1209] text-sm">{name}</p>
+              <p className="text-[#7A6A58] text-[10px] leading-tight mt-0.5">
+                {desc}
+              </p>
+            </div>
+          </button>
+        ))}
       </div>
+
       {selected && (
         <button
           onClick={startQuiz}
           disabled={loading}
-          className="w-full bg-[#7C4F2F] text-white py-3.5 rounded-xl font-serif hover:bg-[#5C3820] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+          className="w-full bg-[#1A1209] text-white py-5 rounded-[2rem] font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-70 shadow-xl"
         >
           {loading ? (
             <>
-              <Loader2 size={16} className="animate-spin" /> AI асуулт үүсгэж
+              <Loader2 size={20} className="animate-spin" /> Асуулт бэлдэж
               байна...
             </>
           ) : (
-            "Тест эхлүүлэх"
+            <>
+              Тест эхлүүлэх <ChevronRight size={20} />
+            </>
           )}
         </button>
       )}
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center mt-20">
+          <Loader2 className="animate-spin" />
+        </div>
+      }
+    >
+      <QuizContent />
+    </Suspense>
   );
 }

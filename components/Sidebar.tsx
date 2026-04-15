@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpen, Trophy, Compass, Map, Swords } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  Trophy,
+  Compass,
+  Map,
+  Swords,
+  Flag,
+  Gamepad2,
+  Mountain,
+} from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Нүүр хуудас", icon: Home },
+  { href: "/mongolia", label: "Монгол", icon: Mountain },
+  { href: "/flags", label: "Далбаанууд", icon: Flag },
+  { href: "/flag-quiz", label: "Далбаа таах", icon: Gamepad2 },
   { href: "/explore", label: "Судлах", icon: Compass },
   { href: "/quiz", label: "Тест шалгалт", icon: BookOpen },
-  { href: "/progress", label: "Миний ахиц", icon: Trophy },
   { href: "/challenge", label: "Өрсөлдөх", icon: Swords },
   { href: "/leaderboard", label: "Тэргүүлэгчид", icon: Trophy },
 ];
@@ -21,16 +33,18 @@ export default function Sidebar() {
       <div className="px-2 mb-10">
         <div className="flex items-center gap-3 mb-2 text-[#7C4F2F]">
           <Map size={28} strokeWidth={2.5} />
+
           <h1 className="text-2xl font-serif font-bold text-[#2C1F14] tracking-tight">
             Атлас
           </h1>
         </div>
+
         <p className="text-[10px] text-[#A68966] uppercase tracking-[0.2em] font-bold">
           Дэлхийг судлаарай
         </p>
       </div>
 
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col gap-1.5 overflow-y-auto pr-2 custom-scrollbar">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active =
             pathname === href || (href !== "/" && pathname.startsWith(href));
@@ -39,7 +53,7 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm transition-all duration-300 group ${
+              className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm transition-all duration-300 group ${
                 active
                   ? "bg-[#7C4F2F] text-[#FDFBF7] shadow-lg shadow-[#7C4F2F]/20"
                   : "text-[#6B5645] hover:bg-[#F2EDE4] hover:text-[#2C1F14]"
@@ -54,7 +68,9 @@ export default function Sidebar() {
                 }
               />
               <span
-                className={`font-serif font-medium ${active ? "opacity-100" : "opacity-80 group-hover:opacity-100"}`}
+                className={`font-serif font-medium ${
+                  active ? "opacity-100" : "opacity-80 group-hover:opacity-100"
+                }`}
               >
                 {label}
               </span>

@@ -20,7 +20,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
   const categoryTopics = topics[params.slug] || [];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl px-4 py-8 mx-auto">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -31,21 +31,21 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
         >
           <ArrowLeft
             size={16}
-            className="group-hover:-translate-x-1 transition-transform"
+            className="transition-transform group-hover:-translate-x-1"
           />{" "}
           Буцах
         </Link>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden rounded-3xl bg-white border border-[#E2D9CC] p-8 md:p-10 shadow-sm"
           >
             <div className="relative z-10">
-              <span className="text-5xl mb-4 block animate-bounce-slow">
+              <span className="block mb-4 text-5xl animate-bounce-slow">
                 {category.icon}
               </span>
               <h1 className="text-4xl md:text-5xl font-serif text-[#1A1209] mb-4">
@@ -73,7 +73,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {categoryTopics.map((topic, i) => (
                 <motion.div
                   key={i}
@@ -82,7 +82,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                   transition={{ delay: i * 0.1 }}
                   className="group bg-white rounded-2xl p-6 border border-[#E2D9CC] hover:border-[#7C4F2F] hover:shadow-xl transition-all duration-300"
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-start justify-between mb-4">
                     <h3 className="font-serif font-bold text-lg text-[#1A1209] group-hover:text-[#7C4F2F] transition-colors">
                       {topic.title}
                     </h3>
@@ -107,7 +107,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                     ))}
                   </div>
 
-                  <div className="space-y-2 mb-6">
+                  <div className="mb-6 space-y-2">
                     {topic.facts.slice(0, 2).map((fact, j) => (
                       <div
                         key={j}
@@ -141,8 +141,8 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
         <div className="space-y-6">
           <div className="bg-[#1A1209] rounded-3xl p-6 text-white relative overflow-hidden group shadow-lg">
             <div className="relative z-10">
-              <h3 className="font-serif text-xl mb-2">Мэдлэгээ шалгах уу?</h3>
-              <p className="text-gray-400 text-sm mb-6">
+              <h3 className="mb-2 font-serif text-xl">Мэдлэгээ шалгах уу?</h3>
+              <p className="mb-6 text-sm text-gray-400">
                 Тухайн ангиллын асуултуудад хариулж XP оноо цуглуулаарай.
               </p>
               <Link
@@ -161,7 +161,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           <div className="bg-[#FFF9F2] p-6 rounded-3xl border border-[#F0DDD0]">
             <div className="flex items-center gap-2 mb-4 text-orange-600">
               <Lightbulb size={20} className="animate-pulse" />
-              <span className="font-bold text-sm uppercase tracking-widest">
+              <span className="text-sm font-bold tracking-widest uppercase">
                 Та мэдсэн үү?
               </span>
             </div>
@@ -171,24 +171,6 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                 "Газарзүй бол дэлхий ертөнцийг таних хамгийн том цонх юм."}
               "
             </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-[#E2D9CC] shadow-sm">
-            <h4 className="font-serif font-bold text-[#1A1209] mb-4">
-              Таны ахиц
-            </h4>
-            <div className="space-y-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-[#7A6A58]">Судалсан хичээл</span>
-                <span className="font-bold">0%</span>
-              </div>
-              <div className="h-2 bg-[#F0EAE0] rounded-full overflow-hidden">
-                <div className="h-full bg-[#7C4F2F] w-0" />
-              </div>
-              <p className="text-[10px] text-[#7A6A58] text-center italic">
-                Хичээл бүрийг үзэж дуусгаснаар ахиц нэмэгдэнэ.
-              </p>
-            </div>
           </div>
         </div>
       </div>

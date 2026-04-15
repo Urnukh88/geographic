@@ -80,7 +80,6 @@ export const categories = [
   },
 ];
 
-// 3. Сэдвүүд (Slug-тай)
 export const topics: Record<string, Topic[]> = {
   physical: [
     {
