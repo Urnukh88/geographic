@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { addXP } from "@/lib/exp";
+import { awardXP } from "@/lib/exp";
 import QuizRunner from "@/components/QuizRunner";
 import { Swords } from "lucide-react";
 
@@ -48,12 +48,10 @@ export default function AcceptChallengePage() {
       .update({ challenged_score: score, status: "done" })
       .eq("id", challengeId);
 
-    await addXP(
+    const isPerfect = score === total;
+    await awardXP(
       user.id,
-      user.fullName || "Судлаач",
-      user.imageUrl,
-      score,
-      total,
+      isPerfect ? "QUIZ_PERFECT" : "CHALLENGE_PARTICIPATE",
     );
 
     router.push("/challenge");

@@ -13,39 +13,32 @@ export type XPReason = keyof typeof XP_REWARDS;
 export async function awardXP(userId: string, reason: XPReason) {
   const amount = XP_REWARDS[reason];
 
-  await supabase.from("xp_transactions").insert({
+  console.log("🎯 awardXP called:", { userId, reason, amount });
+
+  const { error: txError } = await supabase.from("xp_transactions").insert({
     user_id: userId,
     amount,
     reason,
   });
+  console.log("xp_transactions insert:", txError ?? "✅ success");
 
-  await supabase.rpc("increment_xp", {
+  const { error: rpcError } = await supabase.rpc("increment_xp", {
     p_user_id: userId,
     p_amount: amount,
   });
+  console.log("increment_xp rpc:", rpcError ?? "✅ success");
 
   return amount;
 }
 
 export async function getLeaderboard(limit = 20) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_xp")
-    .select(
-      `
-      user_id,
-      total_xp,
-      weekly_xp,
-      streak_days,
-      profiles (
-        username,
-        display_name,
-        avatar_url
-      )
-    `,
-    )
+    .select("user_id, total_xp, weekly_xp, streak_days")
     .order("total_xp", { ascending: false })
     .limit(limit);
 
+  console.log("getLeaderboard:", data, error);
   return data ?? [];
 }
 
