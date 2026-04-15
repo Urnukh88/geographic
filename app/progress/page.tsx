@@ -50,7 +50,6 @@ export default function ProgressPage() {
     }
   }, [user, isLoaded]);
 
-  // 1. Clerk ачаалж байгаа үед
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -59,7 +58,6 @@ export default function ProgressPage() {
     );
   }
 
-  // 2. Хэрэглэгч нэвтрээгүй үед харагдах хэсэг
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
@@ -82,7 +80,6 @@ export default function ProgressPage() {
     );
   }
 
-  // 3. Дата ачаалж байх үед
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -91,7 +88,6 @@ export default function ProgressPage() {
     );
   }
 
-  // Тооцооллууд
   const totalQuizzes = results.length;
   const avgScore =
     totalQuizzes > 0
@@ -113,7 +109,6 @@ export default function ProgressPage() {
         <p className="text-[#7A6A58]">Таны суралцсан мэдлэг, дүн үнэлгээ</p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Тест өгсөн", value: totalQuizzes, icon: Target },
@@ -136,7 +131,6 @@ export default function ProgressPage() {
         ))}
       </div>
 
-      {/* Level Progress */}
       <div className="bg-[#EDE5D8] rounded-xl p-6 mb-6 flex items-center justify-between border border-[#D4C9B8]">
         <div className="flex-1">
           <div className="flex justify-between mb-2">
@@ -162,7 +156,6 @@ export default function ProgressPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* Recent History */}
         <div className="bg-white rounded-xl p-6 border border-[#E2D9CC] shadow-sm">
           <h2 className="font-serif font-semibold text-[#1A1209] mb-4">
             Сүүлийн тестүүд
@@ -203,7 +196,6 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        {/* Improvements */}
         <div className="bg-white rounded-xl p-6 border border-[#E2D9CC] shadow-sm">
           <h2 className="font-serif font-semibold text-[#1A1209] mb-4">
             Дахин давтах сэдвүүд
