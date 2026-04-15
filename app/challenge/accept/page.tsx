@@ -1,14 +1,14 @@
 "use client";
 
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { awardXP } from "@/lib/exp";
 import QuizRunner from "@/components/QuizRunner";
-import { Swords } from "lucide-react";
+import { Swords, Loader2 } from "lucide-react";
 
-export default function AcceptChallengePage() {
+function AcceptChallengeContent() {
   const params = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
@@ -83,4 +83,18 @@ export default function AcceptChallengePage() {
   }
 
   return <QuizRunner onFinish={onFinish} />;
+}
+
+export default function AcceptChallengePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <Loader2 className="animate-spin text-[#7C4F2F]" size={32} />
+        </div>
+      }
+    >
+      <AcceptChallengeContent />
+    </Suspense>
+  );
 }
