@@ -199,7 +199,7 @@ export default function Page() {
       setExpanded(null);
       setSearch("");
       try {
-        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(cat.query)}&lang=en&max=10&apikey=${GNEWS_API_KEY}`;
+        const url = `/api/news?q=${encodeURIComponent(cat.query)}&lang=en`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.errors) throw new Error(data.errors[0]);
