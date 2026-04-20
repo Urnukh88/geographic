@@ -1,26 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Globe2,
-  X,
-  MapPin,
-  Users,
-  Coins,
-  Languages,
-  ExternalLink,
-  Clock,
-  Loader2,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Search, Globe2, Loader2 } from "lucide-react";
 
 export default function FlagsPage() {
   const [countries, setCountries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("Бүгд");
-  const [selectedCountry, setSelectedCountry] = useState<any | null>(null);
+  const [saved, setSaved] = useState<string[]>([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const router = useRouter();
 
   const regions = ["Бүгд", "Asia", "Europe", "Americas", "Africa", "Oceania"];
 
@@ -28,23 +20,17 @@ export default function FlagsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        const url =
-          "https://restcountries.com/v3.1/all?fields=name,flags,capital,region,subregion,population,currencies,languages,timezones,cca3";
-
-        const res = await fetch(url);
-
-        if (!res.ok) {
-          throw new Error(`API Error: ${res.status}`);
-        }
-
+        const res = await fetch(
+          "https://restcountries.com/v3.1/all?fields=name,flags,capital,region,subregion,population,currencies,languages,timezones,cca3",
+        );
+        if (!res.ok) throw new Error(`API Error: ${res.status}`);
         const data = await res.json();
-
         if (Array.isArray(data)) {
-          const sorted = data.sort((a: any, b: any) =>
-            (a.name?.common || "").localeCompare(b.name?.common || ""),
+          setCountries(
+            data.sort((a: any, b: any) =>
+              (a.name?.common || "").localeCompare(b.name?.common || ""),
+            ),
           );
-          setCountries(sorted);
         }
       } catch (err) {
         console.error("Дата татахад алдаа гарлаа:", err);
@@ -53,7 +39,21 @@ export default function FlagsPage() {
       }
     };
     fetchData();
+
+    const s = localStorage.getItem("savedCountries");
+    if (s) setSaved(JSON.parse(s));
   }, []);
+
+  const toggleSave = (cca3: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaved((prev) => {
+      const next = prev.includes(cca3)
+        ? prev.filter((c) => c !== cca3)
+        : [...prev, cca3];
+      localStorage.setItem("savedCountries", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const filtered = useMemo(() => {
     return countries.filter((c) => {
@@ -61,9 +61,10 @@ export default function FlagsPage() {
       const matchesSearch = name.includes(search.toLowerCase());
       const matchesRegion =
         selectedRegion === "Бүгд" || c.region === selectedRegion;
-      return matchesSearch && matchesRegion;
+      const matchesSaved = !showSaved || saved.includes(c.cca3);
+      return matchesSearch && matchesRegion && matchesSaved;
     });
-  }, [search, selectedRegion, countries]);
+  }, [search, selectedRegion, countries, showSaved, saved]);
 
   if (loading)
     return (
@@ -118,22 +119,91 @@ export default function FlagsPage() {
                         : r}
             </button>
           ))}
+
+          <button
+            onClick={() => setShowSaved(!showSaved)}
+            className={`px-6 py-2.5 rounded-full font-serif text-sm transition-all flex items-center gap-2 ${
+              showSaved
+                ? "bg-[#7C4F2F] text-white shadow-lg"
+                : "bg-white border border-[#E2D9CC] text-[#A68966] hover:border-[#7C4F2F]"
+            }`}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              stroke={showSaved ? "white" : "#7C4F2F"}
+              strokeWidth="2"
+              fill={showSaved ? "white" : "none"}
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            Хадгалсан
+            {saved.length > 0 && (
+              <span
+                className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${showSaved ? "bg-white/20" : "bg-[#F2EDE4]"}`}
+              >
+                {saved.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
+
+      {showSaved && saved.length === 0 && (
+        <div className="py-20 text-center">
+          <div className="flex justify-center mb-4">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              stroke="#7C4F2F"
+              strokeWidth="1.5"
+              fill="none"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </div>
+          <p className="font-serif text-[#A68966]">
+            Хадгалсан улс байхгүй байна
+          </p>
+          <p className="font-serif text-sm text-[#C4A882] mt-2">
+            Улсын карт дээрх зүрх товч дарж хадгална уу
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filtered.map((country) => (
           <motion.div
-            layoutId={country.cca3}
             key={country.cca3}
-            onClick={() => setSelectedCountry(country)}
-            className="group bg-white rounded-3xl border border-[#E2D9CC] overflow-hidden hover:shadow-xl cursor-pointer transition-all"
+            whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}
+            onClick={() => router.push(`/flags/${country.cca3}`)}
+            className="group bg-white rounded-3xl border border-[#E2D9CC] overflow-hidden cursor-pointer transition-all relative"
           >
+            <button
+              onClick={(e) => toggleSave(country.cca3, e)}
+              className="absolute z-10 flex items-center justify-center w-8 h-8 transition-transform rounded-full shadow-sm top-3 right-3 bg-white/90 backdrop-blur hover:scale-110"
+            >
+              <span className="text-base">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  stroke="#7C4F2F"
+                  strokeWidth="2"
+                  fill={saved.includes(country.cca3) ? "#7C4F2F" : "none"}
+                >
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </span>
+            </button>
+
             <div className="aspect-[16/10] overflow-hidden bg-[#F2EDE4]">
               <img
                 src={country.flags?.svg}
                 className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                alt=""
+                alt={country.name?.common}
               />
             </div>
             <div className="p-5 font-serif">
@@ -146,125 +216,6 @@ export default function FlagsPage() {
             </div>
           </motion.div>
         ))}
-      </div>
-
-      <AnimatePresence>
-        {selectedCountry && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
-            <motion.div
-              layoutId={selectedCountry.cca3}
-              className="bg-[#FDFBF7] w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto"
-            >
-              <button
-                onClick={() => setSelectedCountry(null)}
-                className="absolute right-6 top-6 z-10 p-2 bg-white/80 backdrop-blur rounded-full text-[#1A1209] hover:bg-white transition-colors"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="aspect-[2/1] w-full relative">
-                <img
-                  src={selectedCountry.flags?.svg}
-                  className="object-cover w-full h-full shadow-inner"
-                  alt=""
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] to-transparent" />
-              </div>
-
-              <div className="relative p-8 -mt-20 font-serif md:p-12">
-                <div className="mb-8">
-                  <h2 className="text-4xl text-[#1A1209] mb-1 font-bold">
-                    {selectedCountry.name?.common}
-                  </h2>
-                  <p className="text-[#A68966]">
-                    {selectedCountry.name?.official}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 mb-10 md:grid-cols-2">
-                  <InfoItem
-                    icon={<MapPin size={18} />}
-                    label="Нийслэл"
-                    value={selectedCountry.capital?.[0]}
-                  />
-
-                  <InfoItem
-                    icon={<Users size={18} />}
-                    label="Хүн ам"
-                    value={
-                      selectedCountry.population
-                        ? selectedCountry.population.toLocaleString()
-                        : "Мэдээлэлгүй"
-                    }
-                  />
-                  <InfoItem
-                    icon={<Coins size={18} />}
-                    label="Валют"
-                    value={
-                      selectedCountry.currencies
-                        ? Object.values(selectedCountry.currencies)
-                            .map((c: any) => c.name || "—")
-                            .join(", ")
-                        : "—"
-                    }
-                  />
-                  <InfoItem
-                    icon={<Languages size={18} />}
-                    label="Хэл"
-                    value={
-                      selectedCountry.languages
-                        ? Object.values(selectedCountry.languages).join(", ")
-                        : "—"
-                    }
-                  />
-                  <InfoItem
-                    icon={<Clock size={18} />}
-                    label="Цагийн бүс"
-                    value={selectedCountry.timezones?.[0]}
-                  />
-                  <InfoItem
-                    icon={<Globe2 size={18} />}
-                    label="Дэд бүс"
-                    value={selectedCountry.subregion}
-                  />
-                </div>
-
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedCountry.name?.common || "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 w-full bg-[#7C4F2F] text-white py-4 rounded-2xl font-serif hover:bg-[#5C3820] transition-all shadow-lg"
-                >
-                  <ExternalLink size={20} /> Google Maps дээр харах
-                </a>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function InfoItem({
-  icon,
-  label,
-  value,
-}: {
-  icon: any;
-  label: string;
-  value: any;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="p-2.5 bg-[#F2EDE4] rounded-xl text-[#7C4F2F]">{icon}</div>
-      <div>
-        <p className="text-[10px] uppercase tracking-widest text-[#A68966] font-bold">
-          {label}
-        </p>
-        <p className="text-[#2C1F14] font-medium leading-tight">
-          {value || "—"}
-        </p>
       </div>
     </div>
   );

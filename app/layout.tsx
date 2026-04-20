@@ -22,10 +22,10 @@ export default function RootLayout({
           <div className="flex">
             <Sidebar />
 
-            <div className="flex-1 flex flex-col min-h-screen ml-64">
+            <div className="flex flex-col flex-1 min-h-screen ml-64">
               <Header />
 
-              <main className="p-8 max-w-7xl mx-auto w-full">{children}</main>
+              <main className="w-full p-8 mx-auto max-w-7xl">{children}</main>
             </div>
           </div>
           <Chatbot />

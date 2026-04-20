@@ -13,7 +13,6 @@ import {
   Flag,
 } from "lucide-react";
 
-// CSS-ээр хийсэн эргэлддэг дэлхий (Background Glow-той)
 function EarthScene() {
   return (
     <div className="relative flex items-center justify-center w-full h-full scale-110 md:scale-125">
@@ -41,13 +40,11 @@ export default function HeroSection() {
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen px-6 overflow-hidden bg-[#FDFBF7]">
-      {/* Арын фон дахь эргэлддэг Дэлхий */}
       <div className="absolute inset-0 z-0 flex items-center justify-center opacity-60">
         <EarthScene />
       </div>
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-7xl">
-        {/* 1. Badge - Ертөнцийг танин мэдэх аялал */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -57,7 +54,6 @@ export default function HeroSection() {
           <span>Ертөнцийг танин мэдэх аялал</span>
         </motion.div>
 
-        {/* 2. Main Title - Explore Boundless */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -72,7 +68,6 @@ export default function HeroSection() {
           </h1>
         </motion.div>
 
-        {/* 3. Ишлэл - "Дэлхий ертөнц бол уншаагүй байгаа ном юм." */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -82,7 +77,6 @@ export default function HeroSection() {
           "Дэлхий ертөнц бол уншаагүй байгаа ном юм."
         </motion.p>
 
-        {/* 4. Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,7 +108,6 @@ export default function HeroSection() {
           </Link>
         </motion.div>
 
-        {/* 5. Статистик - 8+ Ангилал, 200+ Асуулт... */}
         <div className="grid grid-cols-3 gap-8 md:gap-24 border-t border-[#E2D9CC] pt-12 w-full max-w-3xl">
           <StatItem num="8+" label="Ангилал" />
           <StatItem num="200+" label="Асуулт" />
@@ -122,7 +115,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Background Floating Elements */}
       <FloatingIcon Icon={Mountain} top="20%" left="15%" delay={0} />
       <FloatingIcon Icon={Waves} top="25%" right="15%" delay={2} />
       <FloatingIcon Icon={Flag} bottom="20%" left="20%" delay={4} />
