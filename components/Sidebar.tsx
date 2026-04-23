@@ -35,10 +35,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-[260px] flex-col border-r border-[#E2D9CC] bg-[#FDFBF7] px-5 py-10 text-[#4A3728]">
       <div className="px-2 mb-10">
         <div className="flex items-center gap-3 mb-2 text-[#7C4F2F]">
-          <Map size={28} strokeWidth={2.5} />
-          <h1 className="text-2xl font-serif font-bold text-[#2C1F14] tracking-tight">
-            Атлас
-          </h1>
+          <img className="w-15" src="/logo.png" alt="" />
         </div>
         <p className="text-[10px] text-[#A68966] uppercase tracking-[0.2em] font-bold">
           Дэлхийг судлаарай
